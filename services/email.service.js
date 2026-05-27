@@ -19,6 +19,15 @@ function getResendClient() {
 
 async function sendEmail(payload) {
   const resend = getResendClient();
+  const redirect = process.env.DEV_REDIRECT_EMAIL;
+  if (redirect) {
+    const originalTo = Array.isArray(payload.to) ? payload.to.join(', ') : payload.to;
+    payload = {
+      ...payload,
+      to: redirect,
+      subject: `[PRUEBA → ${originalTo}] ${payload.subject}`,
+    };
+  }
   const result = await resend.emails.send(payload);
   if (result.error) {
     throw new Error(result.error.message || 'Error enviando email con Resend');
