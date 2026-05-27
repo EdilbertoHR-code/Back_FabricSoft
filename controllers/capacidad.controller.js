@@ -1,4 +1,5 @@
 const Capacidad = require('../models/model.capacidad');
+const { log } = require('../services/log.service');
 
 async function getSingleton() {
   let doc = await Capacidad.findOne();
@@ -43,6 +44,14 @@ exports.update = async (req, res) => {
       );
     }
 
+    log({
+      accion: 'UPDATE - Capacidad',
+      categoria: 'Capacidad',
+      autor: req.auth?.claims?.email || 'admin',
+      status: 'OK',
+      detalle: 'Configuración general de capacidad actualizada',
+    });
+
     const updated = await Capacidad.findById(doc._id);
     res.json({ ok: true, data: updated });
   } catch (err) {
@@ -77,6 +86,14 @@ exports.updateSlot = async (req, res) => {
       { $set: slotUpdate },
       { runValidators: true }
     );
+
+    log({
+      accion: `UPDATE - Slot #${id}`,
+      categoria: 'Capacidad',
+      autor: req.auth?.claims?.email || 'admin',
+      status: 'OK',
+      detalle: `Slot #${id} actualizado a estado: ${status}, Asignado a: ${assignedLead || 'ninguno'}`,
+    });
 
     const updated = await Capacidad.findById(doc._id);
     res.json({ ok: true, data: updated });

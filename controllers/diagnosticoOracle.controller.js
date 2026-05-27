@@ -1,4 +1,5 @@
 const DiagnosticoOracle = require('../models/model.diagnosticoOracle');
+const { log } = require('../services/log.service');
 
 const STATUS_FLOW = ['nuevo', 'en_revision', 'contactado', 'aprobado', 'descartado'];
 
@@ -453,6 +454,14 @@ exports.crearDiagnostico = async (req, res) => {
       userAgent: String(req.headers['user-agent'] || '').slice(0, 260),
     });
 
+    log({
+      accion: `CREATE - Diagnostico Oracle - ${diagnostico.contact?.company}`,
+      categoria: 'Sistema',
+      autor: 'system',
+      status: 'OK',
+      detalle: `${diagnostico.contact?.name} - Score: ${result.totalScore}`,
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Diagnostico recibido correctamente.',
@@ -527,6 +536,14 @@ exports.actualizarDiagnostico = async (req, res) => {
       return res.status(404).json({ error: 'Diagnostico no encontrado.' });
     }
 
+    log({
+      accion: `UPDATE - Diagnostico Oracle - ${diagnostico.contact?.company}`,
+      categoria: 'Sistema',
+      autor: req.auth?.claims?.email || 'admin',
+      status: 'OK',
+      detalle: `Estado cambiado a: ${status}`,
+    });
+
     return res.status(200).json({
       success: true,
       diagnostico,
@@ -579,6 +596,14 @@ exports.enviarDiagnostico = async (req, res) => {
       { returnDocument: 'after', runValidators: true }
     ).lean();
 
+    log({
+      accion: `SEND - Diagnostico Oracle - ${diagnostico.contact?.company}`,
+      categoria: 'Sistema',
+      autor: req.auth?.claims?.email || 'admin',
+      status: 'OK',
+      detalle: `Correo enviado a ${diagnostico.contact?.email}`,
+    });
+
     return res.status(200).json({
       success: true,
       diagnostico,
@@ -618,6 +643,14 @@ exports.eliminarDiagnostico = async (req, res) => {
     if (!diagnostico) {
       return res.status(404).json({ error: 'Diagnostico no encontrado.' });
     }
+
+    log({
+      accion: `DELETE - Diagnostico Oracle - ${diagnostico.contact?.company}`,
+      categoria: 'Sistema',
+      autor: req.auth?.claims?.email || 'admin',
+      status: 'WARN',
+      detalle: `Diagnostico de ${diagnostico.contact?.name} eliminado`,
+    });
 
     return res.status(200).json({
       success: true,
