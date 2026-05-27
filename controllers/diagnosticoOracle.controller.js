@@ -383,10 +383,18 @@ async function sendDiagnosticEmail(diagnostico, options = {}) {
   const html = options.message
     ? `<div style="font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#111111;white-space:pre-wrap;">${escapeHtml(text)}</div>`
     : defaultEmail.html;
-  const to = diagnostico.contact?.email;
+  const intendedTo = diagnostico.contact?.email;
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.DIAGNOSTIC_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'FABRIC <onboarding@resend.dev>';
   const wordContent = buildDiagnosticWordDocument(diagnostico);
+
+  // Sin dominio verificado, Resend solo entrega al email dueño de la cuenta.
+  // DEV_REDIRECT_EMAIL activa la redirección; en producción (dominio verificado) se deja vacío.
+  const redirectTo = process.env.DEV_REDIRECT_EMAIL || '';
+  const to = redirectTo || intendedTo;
+  const finalSubject = redirectTo && redirectTo !== intendedTo
+    ? `[PRUEBA → ${intendedTo}] ${subject}`
+    : subject;
 
   if (!apiKey) {
     throw new Error('Falta RESEND_API_KEY para enviar correos automaticos con documento Word.');
@@ -401,7 +409,7 @@ async function sendDiagnosticEmail(diagnostico, options = {}) {
     body: JSON.stringify({
       from,
       to: [to],
-      subject,
+      subject: finalSubject,
       html,
       text,
       attachments: [
