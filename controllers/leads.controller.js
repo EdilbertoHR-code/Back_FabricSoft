@@ -396,6 +396,22 @@ exports.solicitarReadinessScore = async (req, res) => {
       tracking,
     } = req.body;
 
+    // Validation
+    const VALID_NIVELES = ['LISTO', 'PREPARACIÓN PREVIA', 'ESPERAR'];
+    if (!VALID_NIVELES.includes(nivel)) {
+      return res.status(400).json({ error: 'Nivel de readiness no válido.' });
+    }
+    // Ensure respuestas object exists
+    const requiredFields = ['patrocinio','presupuesto','procesos','datos','equipo','integraciones','plazo','usuarios','compliance','experiencia','consultora','alcance','gobierno','ciclo','comunicacion'];
+    if (!respuestas || typeof respuestas !== 'object') {
+      return res.status(400).json({ error: 'Respuestas del readiness score requeridas.' });
+    }
+    for (const field of requiredFields) {
+      if (typeof respuestas[field] !== 'string') {
+        return res.status(400).json({ error: `Respuesta ${field} debe ser una cadena.` });
+      }
+    }
+
     if (!nombre?.trim())  return res.status(400).json({ error: 'Nombre requerido.' });
     if (!cargo?.trim())   return res.status(400).json({ error: 'Cargo requerido.' });
     if (!empresa?.trim()) return res.status(400).json({ error: 'Empresa requerida.' });
@@ -426,21 +442,21 @@ exports.solicitarReadinessScore = async (req, res) => {
       historial: [{ fecha: nowLabel(), estado: 'Nuevo', autor: 'Sistema' }],
       tracking:  sanitizeTracking(tracking),
       readinessScore: {
-        patrocinio:    respuestas?.patrocinio    || '',
-        presupuesto:   respuestas?.presupuesto   || '',
-        procesos:      respuestas?.procesos      || '',
-        datos:         respuestas?.datos         || '',
-        equipo:        respuestas?.equipo        || '',
-        integraciones: respuestas?.integraciones || '',
-        plazo:         respuestas?.plazo         || '',
-        usuarios:      respuestas?.usuarios      || '',
-        compliance:    respuestas?.compliance    || '',
-        experiencia:   respuestas?.experiencia   || '',
-        consultora:    respuestas?.consultora    || '',
-        alcance:       respuestas?.alcance       || '',
-        gobierno:      respuestas?.gobierno      || '',
-        ciclo:         respuestas?.ciclo         || '',
-        comunicacion:  respuestas?.comunicacion  || '',
+        patrocinio:    respuestas.patrocinio,
+        presupuesto:   respuestas.presupuesto,
+        procesos:      respuestas.procesos,
+        datos:         respuestas.datos,
+        equipo:        respuestas.equipo,
+        integraciones: respuestas.integraciones,
+        plazo:         respuestas.plazo,
+        usuarios:      respuestas.usuarios,
+        compliance:    respuestas.compliance,
+        experiencia:   respuestas.experiencia,
+        consultora:    respuestas.consultora,
+        alcance:       respuestas.alcance,
+        gobierno:      respuestas.gobierno,
+        ciclo:         respuestas.ciclo,
+        comunicacion:  respuestas.comunicacion,
         scoreTotal,
         nivel,
       },

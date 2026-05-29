@@ -146,8 +146,14 @@ function calculateMarketTco(payload) {
   const explicitAnnualCost = knownAnnualSpend > 0 ? knownAnnualSpend : licenseCost + infraCost + supportCost;
   const marketCostPerUser = MARKET_COST_PER_USER[erp] || MARKET_COST_PER_USER['Otro / Greenfield'];
   const marketAnnualCost = Math.round(users * marketCostPerUser * (INDUSTRY_COST_MULTIPLIER[industry] || 1));
-  const totalAnnualCost = explicitAnnualCost > 0 ? explicitAnnualCost : marketAnnualCost;
-  const costSource = explicitAnnualCost > 0 ? 'provided' : 'market';
+  
+  // Lógica de costo mínimo operativo estimado (ej. mínimo $5k o $150 por usuario)
+  const minOperatingCost = Math.max(5000, users * 150);
+  const isCostAbnormallyLow = explicitAnnualCost > 0 && explicitAnnualCost < minOperatingCost;
+
+  const totalAnnualCost = (explicitAnnualCost > 0 && !isCostAbnormallyLow) ? explicitAnnualCost : marketAnnualCost;
+  const costSource = (explicitAnnualCost > 0 && !isCostAbnormallyLow) ? 'provided' : 'market';
+  
   const monthlyTransactions = payload.monthlyTransactions || inferTransactionVolume(users);
   const primaryPain = payload.primaryPain || inferPain(erp);
   const decisionTimeline = payload.decisionTimeline || '6-12 meses';
@@ -199,6 +205,9 @@ function calculateMarketTco(payload) {
       annualCostAssumption: marketAnnualCost,
       costPerUserAssumption: marketCostPerUser,
       costSource,
+      isCostAbnormallyLow,
+      enteredAnnualCost: explicitAnnualCost,
+      minOperatingCost,
       savingsRateBase: benchmark.savings,
       savingsRateAdjusted: adjustedSavingsRate,
       inferred: {
